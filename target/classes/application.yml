@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /$\{segment}
+        - id: incident-service
+          uri: lb://incidentiq-service
+          predicates:
+            - Path=/api/incidents/**
+          filters:
+            - RewritePath=/api/incidents/(?<segment>.*), /$\{segment}
+            - AuthenticationFilter
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - RewritePath=/api/users/(?<segment>.*), /$\{segment}
+            - AuthenticationFilter
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /api/auth/v3/api-docs
+      - name: Incident Service
+        url: /api/incidents/v3/api-docs
+      - name: User Service
+        url: /api/users/v3/api-docs
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: ThisIsAVeryLongSecretKeyUsedForJWTTokenGenerationAndValidationItMustBeAtLeast256BitsLong
+  expiration: 86400000 # 24 hours in ms
