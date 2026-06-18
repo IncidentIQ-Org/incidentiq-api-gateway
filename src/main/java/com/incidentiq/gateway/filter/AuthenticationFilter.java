@@ -27,9 +27,9 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
-            // Bypass authentication for Swagger API docs and public endpoints
+            // Bypass authentication for Swagger API docs, public endpoints, and technicians endpoint
             String path = request.getURI().getPath();
-            if (path.contains("/v3/api-docs") || path.contains("/swagger-ui")) {
+            if (path.contains("/v3/api-docs") || path.contains("/swagger-ui") || path.contains("/technicians")) {
                 return chain.filter(exchange);
             }
 
@@ -48,19 +48,19 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             try {
                 // Validate token
                 jwtUtil.validateToken(authHeader);
-                
-                // Optional: Extract claims and pass downstream
+
+                // Extract claims and pass downstream as headers
                 Claims claims = jwtUtil.getAllClaimsFromToken(authHeader);
-                exchange.getRequest().mutate()
+                ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                         .header("X-User-Id", claims.get("userId") != null ? claims.get("userId").toString() : "")
                         .header("X-User-Role", claims.get("role") != null ? claims.get("role").toString() : "")
                         .build();
 
-            } catch (Exception e) {
-                return onError(exchange, "Unauthorized access: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
-            }
+                return chain.filter(exchange.mutate().request(mutatedRequest).build());
 
-            return chain.filter(exchange);
+            } catch (Exception e) {
+                return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
+            }
         });
     }
 

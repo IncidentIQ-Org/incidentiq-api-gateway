@@ -1,0 +1,83 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "${ALLOWED_ORIGINS:http://localhost:3000}"
+            allowedMethods: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
+            allowedHeaders: "Authorization,Content-Type,X-User-Id,X-User-Role"
+            allowCredentials: false
+            maxAge: 3600
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /$\{segment}
+        - id: incident-service
+          uri: lb://INCIDENTIQ-SERVICE
+          predicates:
+            - Path=/api/incidents/**
+          filters:
+            - RewritePath=/api/incidents/(?<segment>.*), /$\{segment}
+            - AuthenticationFilter
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - RewritePath=/api/users/(?<segment>.*), /$\{segment}
+            - AuthenticationFilter
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - RewritePath=/api/notifications/(?<segment>.*), /$\{segment}
+            - AuthenticationFilter
+        - id: gamification-service
+          uri: lb://gamification-service
+          predicates:
+            - Path=/api/gamification/**
+          filters:
+            - RewritePath=/api/gamification/(?<segment>.*), /gamification/$\{segment}
+            - AuthenticationFilter
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /api/auth/v3/api-docs
+      - name: Incident Service
+        url: /api/incidents/v3/api-docs
+      - name: User Service
+        url: /api/users/v3/api-docs
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/
+
+jwt:
+  secret: ${JWT_SECRET:ThisIsAVeryLongSecretKeyUsedForJWTTokenGenerationAndValidationItMustBeAtLeast256BitsLong}
+  expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

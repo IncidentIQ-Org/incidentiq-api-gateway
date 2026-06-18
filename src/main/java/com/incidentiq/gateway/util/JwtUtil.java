@@ -21,18 +21,18 @@ public class JwtUtil {
     }
 
     public Claims getAllClaimsFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public void validateToken(String token) {
         // This will throw exception if token is expired, malformed, or signature is invalid
-        Jwts.parserBuilder()
-            .setSigningKey(getSigningKey())
+        Jwts.parser()
+            .verifyWith(getSigningKey())
             .build()
-            .parseClaimsJws(token);
+            .parseSignedClaims(token);
     }
 }

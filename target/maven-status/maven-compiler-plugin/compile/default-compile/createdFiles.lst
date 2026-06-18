@@ -1,4 +1,0 @@
-com\incidentiq\gateway\util\JwtUtil.class
-com\incidentiq\gateway\ApiGatewayApplication.class
-com\incidentiq\gateway\filter\AuthenticationFilter.class
-com\incidentiq\gateway\filter\AuthenticationFilter$Config.class
