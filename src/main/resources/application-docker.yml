@@ -32,6 +32,13 @@ spring:
           filters:
             - RewritePath=/api/incidents/(?<segment>.*), /$\{segment}
             - AuthenticationFilter
+        - id: ai-copilot
+          uri: lb://INCIDENTIQ-SERVICE
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - RewritePath=/api/ai/(?<segment>.*), /ai/$\{segment}
+            - AuthenticationFilter
         - id: user-service
           uri: lb://user-service
           predicates:
