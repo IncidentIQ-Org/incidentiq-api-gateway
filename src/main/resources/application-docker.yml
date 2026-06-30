@@ -4,8 +4,20 @@ server:
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:redis}
+      port: 6379
+      timeout: 5000ms
   cloud:
     gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 50
+            redis-rate-limiter.burstCapacity: 100
+            key-resolver: "#{@ipKeyResolver}"
+            redis-rate-limiter.deny-on-error: false
       globalcors:
         cors-configurations:
           '[/**]':
